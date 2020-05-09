@@ -335,8 +335,8 @@ class Pdrecaptcha extends Module
         if ($this->context->controller instanceof AuthController 
             && version_compare(_PS_VERSION_, '1.7.1', '>=') >= 1
             && Configuration::get('PD_RECAPTCHA_ENABLE_ACCOUNT') == 1
-            && Tools::isSubmit('submit') ) {
-            $this->validateRecaptcha();
+            && Tools::isSubmit('submitCreate') ) {
+            $this->validateRecaptcha();               
         }
     }
 
