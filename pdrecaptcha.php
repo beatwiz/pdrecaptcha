@@ -55,7 +55,9 @@ class Pdrecaptcha extends Module
             'PD_RECAPTCHA_SITE_KEY'             => '',
             'PD_RECAPTCHA_PRIVATE_KEY'          => '',
             'PD_RECAPTCHA_ENABLE_CONTACT'       => 0,
+            'PD_RECAPTCHA_ENABLE_ACCOUNT'       => 0,
             'PD_RECAPTCHA_NAME_BUTTON_CONTACT'  => 'submitMessage',
+            'PD_RECAPTCHA_NAME_BUTTON_ACCOUNT'  => 'submitCreate',
             'PD_RECAPTCHA_SCORE'                => 2,
         );
 
@@ -72,6 +74,7 @@ class Pdrecaptcha extends Module
 
         return parent::install() &&
         $this->registerHook('displayHeader') &&
+        $this->registerHook('actionSubmitAccountBefore') &&
         $this->registerHook('actionBeforeContactSubmit');
     }
 
@@ -94,7 +97,7 @@ class Pdrecaptcha extends Module
         if ((bool)Tools::isSubmit('submitSettings')) {
             if (!$result = $this->preValidateForm()) {
                 $output .= $this->postProcess();
-                $output .= $this->displayConfirmation($this->l('Save all settings.'));
+                $output .= $this->displayConfirmation($this->l('Settings saved!'));
             } else {
                 $output = $result;
                 $output .= $this->renderTabForm();
@@ -114,7 +117,7 @@ class Pdrecaptcha extends Module
         $errors = array();
 
         if (Tools::isEmpty(Tools::getValue('PD_RECAPTCHA_SITE_KEY'))) {
-            $errors[] = $this->l('Site Key is required.');
+            $errors[] = $this->l('Site ey is required.');
         }
 
         if (Tools::isEmpty(Tools::getValue('PD_RECAPTCHA_PRIVATE_KEY'))) {
@@ -122,7 +125,10 @@ class Pdrecaptcha extends Module
         }
 
         if (Tools::isEmpty(Tools::getValue('PD_RECAPTCHA_NAME_BUTTON_CONTACT'))) {
-            $errors[] = $this->l('Name button Contact is required.');
+            $errors[] = $this->l('Contact submit button name is required.');
+        }
+        if (Tools::isEmpty(Tools::getValue('PD_RECAPTCHA_NAME_BUTTON_ACCOUNT'))) {
+            $errors[] = $this->l('Registration submit button name is required.');
         }
 
         if (count($errors)) {
@@ -178,7 +184,7 @@ class Pdrecaptcha extends Module
                                                                                     ),
                                                                                     array(
                                                                                             'type' => 'text',
-                                                                                            'label' => $this->l('Captcha private key'),
+                                                                                            'label' => $this->l('ReCaptcha private key'),
                                                                                             'name' => 'PD_RECAPTCHA_PRIVATE_KEY',
                                                                                             'size'=> 70,
                                                                                             'required' => true,
@@ -206,22 +212,50 @@ class Pdrecaptcha extends Module
                                                                                         ),
                                                                                     ),
                                                                                     array(
+                                                                                        'type' => 'switch',
+                                                                                        'label' => $this->l('Enable ReCaptcha for registration form'),
+                                                                                        'name' => 'PD_RECAPTCHA_ENABLE_ACCOUNT',
+                                                                                        'desc' => $this->l('This will only work with PS version 1.7.1+'),
+                                                                                        'class' => 't',
+                                                                                        'is_bool' => true,
+                                                                                        'tab' => 'general',
+                                                                                        'values' => array(
+                                                                                            array(
+                                                                                                'id' => 'active_on',
+                                                                                                'value'=> 1,
+                                                                                                'label'=> $this->l('Enabled'),
+                                                                                            ),
+                                                                                            array(
+                                                                                                'id' => 'active_off',
+                                                                                                'value'=> 0,
+                                                                                                'label'=> $this->l('Disabled'),
+                                                                                            ),
+                                                                                        ),
+                                                                                    ),
+                                                                                    array(
                                                                                             'type' => 'html',
                                                                                             'name' => 'advanced-warning',
                                                                                             'html_content' => '<div class="alert alert-warning">'
-                                                                                                .$this->l('Use with caution, invalid parameters may made the module not to works properly')
+                                                                                                .$this->l('Use with caution, invalid parameters may make the module to not work properly')
                                                                                                 .'</div>',
                                                                                             'tab' => 'advanced'
                                                                                     ),
                                                                                     array(
                                                                                             'type' => 'text',
-                                                                                            'label' => $this->l('Custom name button contact form'),
-                                                                                            'hint' => $this->l('Use with caution, invalid parameters may made the module not to works properly'),
-                                                                                            'desc' => $this->l('For specific theme you can edit name od the recaptcha submit button'),
+                                                                                            'label' => $this->l('Custom contact form submit button name'),
+                                                                                            'desc' => $this->l('For custom theme contact us page, you can edit name of the recaptcha submit button. Default is "submitMessage".'),
                                                                                             'name' => 'PD_RECAPTCHA_NAME_BUTTON_CONTACT',
                                                                                             'required' => false,
                                                                                             'tab' => 'advanced'
                                                                                     ),
+                                                                                    array(
+                                                                                        'type' => 'text',
+                                                                                        'label' => $this->l('Custom registration form submit button name'),
+                                                                                        'desc' => $this->l('For custom theme registration page, you can edit name of the recaptcha submit button. Default is "submitCreate".'),
+                                                                                        'name' => 'PD_RECAPTCHA_NAME_BUTTON_ACCOUNT',
+                                                                                        'required' => false,
+                                                                                        'tab' => 'advanced'
+                                                                                ),
                                                                                     array(
                                                                                         'type'      => 'select',
                                                                                         'label'     =>  $this->l('Score'),
@@ -267,12 +301,17 @@ class Pdrecaptcha extends Module
 
     public function hookDisplayHeader($params)
     {
-        if ($this->context->controller instanceof ContactController && Configuration::get('PD_RECAPTCHA_ENABLE_CONTACT') == 1) {
+        if ($this->context->controller instanceof ContactController && Configuration::get('PD_RECAPTCHA_ENABLE_CONTACT') == 1 || $this->context->controller instanceof AuthController && Configuration::get('PD_RECAPTCHA_ENABLE_ACCOUNT') == 1) {
+            if ($this->context->controller instanceof ContactController) {
+                $submitButton = Configuration::get('PD_RECAPTCHA_NAME_BUTTON_CONTACT');
+            } else {
+                $submitButton = Configuration::get('PD_RECAPTCHA_NAME_BUTTON_ACCOUNT');
+            }
             $html   = ' <script src="https://www.google.com/recaptcha/api.js?render='.Configuration::get('PD_RECAPTCHA_SITE_KEY').'"></script>';
             $html  .= ' <script type="text/javascript">
                             grecaptcha.ready(function() {
                                 grecaptcha.execute("'.Configuration::get('PD_RECAPTCHA_SITE_KEY').'", {action: "homepage"}).then(function(token) {
-                                    $("[name=\''.Configuration::get('PD_RECAPTCHA_NAME_BUTTON_CONTACT').'\']").before($(\'<input type="hidden" name="g-token">\').attr(\'value\', token));
+                                    $("[name=\''.$submitButton.'\']").before($(\'<input type="hidden" name="g-token">\').attr(\'value\', token));
                                 });
                             });
                         </script>
@@ -287,6 +326,16 @@ class Pdrecaptcha extends Module
         if ($this->context->controller instanceof ContactController &&
             Configuration::get('PD_RECAPTCHA_ENABLE_CONTACT') == 1 &&
             Tools::isSubmit('submitMessage') ) {
+            $this->validateRecaptcha();
+        }
+    }
+
+    public function hookActionSubmitAccountBefore()
+    {
+        if ($this->context->controller instanceof AuthController 
+            && version_compare(_PS_VERSION_, '1.7.1', '>=') >= 1
+            && Configuration::get('PD_RECAPTCHA_ENABLE_ACCOUNT') == 1
+            && Tools::isSubmit('submit') ) {
             $this->validateRecaptcha();
         }
     }
