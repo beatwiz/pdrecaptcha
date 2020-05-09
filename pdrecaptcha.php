@@ -40,8 +40,8 @@ class Pdrecaptcha extends Module
         $this->bootstrap    = true;
         parent::__construct();
 
-        $this->displayName  = $this->l('ReCaptcha v3 invisible');
-        $this->description  = $this->l('Add a ReCaptcha v3 invisible to your contact form ');
+        $this->displayName  = $this->l('reCAPTCHA v3 invisible');
+        $this->description  = $this->l('Add a reCAPTCHA v3 invisible to your contact form ');
         $this->ps_versions_compliancy = array('min' => '1.6.0.0', 'max' => '1.8.0.0');
 
         if (function_exists('curl_init') == false) {
@@ -117,7 +117,7 @@ class Pdrecaptcha extends Module
         $errors = array();
 
         if (Tools::isEmpty(Tools::getValue('PD_RECAPTCHA_SITE_KEY'))) {
-            $errors[] = $this->l('Site ey is required.');
+            $errors[] = $this->l('Site Key is required.');
         }
 
         if (Tools::isEmpty(Tools::getValue('PD_RECAPTCHA_PRIVATE_KEY'))) {
@@ -175,25 +175,25 @@ class Pdrecaptcha extends Module
                                                         'input'         =>  array(
                                                                                     array(
                                                                                             'type' => 'text',
-                                                                                            'label' => $this->l('ReCaptcha site key'),
+                                                                                            'label' => $this->l('reCAPTCHA site key'),
                                                                                             'name' => 'PD_RECAPTCHA_SITE_KEY',
                                                                                             'size'=> 70,
                                                                                             'required' => true,
-                                                                                            'empty_message' => $this->l('Please fill the recaptcha site key'),
+                                                                                            'empty_message' => $this->l('Please fill the reCAPTCHA site key'),
                                                                                             'tab' => 'general'
                                                                                     ),
                                                                                     array(
                                                                                             'type' => 'text',
-                                                                                            'label' => $this->l('ReCaptcha private key'),
+                                                                                            'label' => $this->l('reCAPTCHA private key'),
                                                                                             'name' => 'PD_RECAPTCHA_PRIVATE_KEY',
                                                                                             'size'=> 70,
                                                                                             'required' => true,
-                                                                                            'empty_message' => $this->l('Please fill the recaptcha private key'),
+                                                                                            'empty_message' => $this->l('Please fill the reCAPTCHA private key'),
                                                                                             'tab' => 'general'
                                                                                     ),
                                                                                     array(
                                                                                         'type' => 'switch',
-                                                                                        'label' => $this->l('Enable ReCaptcha for contact form'),
+                                                                                        'label' => $this->l('Enable reCAPTCHA for contact form'),
                                                                                         'name' => 'PD_RECAPTCHA_ENABLE_CONTACT',
                                                                                         'class' => 't',
                                                                                         'is_bool' => true,
@@ -213,7 +213,7 @@ class Pdrecaptcha extends Module
                                                                                     ),
                                                                                     array(
                                                                                         'type' => 'switch',
-                                                                                        'label' => $this->l('Enable ReCaptcha for registration form'),
+                                                                                        'label' => $this->l('Enable reCAPTCHA for registration form'),
                                                                                         'name' => 'PD_RECAPTCHA_ENABLE_ACCOUNT',
                                                                                         'desc' => $this->l('This will only work with PS version 1.7.1+'),
                                                                                         'class' => 't',
@@ -363,25 +363,25 @@ class Pdrecaptcha extends Module
         if (!$decode['success'] == true) {
             switch ($decode['error-codes'][0]) {
                 case 'missing-input-secret':
-                    $errors = $this->l('The secret parameter is missing. Reload page');
+                    $errors = $this->l('The secret parameter is missing. Reload the page.');
                     break;
                 case 'invalid-input-secret':
-                    $errors = $this->l('The secret parameter is invalid or malformed. Reload page');
+                    $errors = $this->l('The secret parameter is invalid or malformed. Reload the page.');
                     break;
                 case 'missing-input-response':
-                    $errors = $this->l('The response parameter is missing. Reload page');
+                    $errors = $this->l('The response parameter is missing. Reload the page.');
                     break;
                 case 'invalid-input-response':
-                    $errors = $this->l('The response parameter is invalid or malformed. Reload page');
+                    $errors = $this->l('The response parameter is invalid or malformed. Reload the page.');
                     break;
                 case 'bad-request':
-                    $errors = $this->l('The request is invalid or malformed. Reload page');
+                    $errors = $this->l('The request is invalid or malformed. Reload the page.');
                     break;
                 case 'timeout-or-duplicate':
-                    $errors = $this->l('The response is no longer valid: either is too old or has been used previously. Reload page');
+                    $errors = $this->l('The response is no longer valid: either is too old or has been used previously. Reload the page.');
                     break;
                 default:
-                    $errors = $this->l('Error general. Reload page');
+                    $errors = $this->l('Something went wrong. Reload the page and try again.');
                     break;
             }
             $this->context->controller->errors[] = $errors;
@@ -399,7 +399,7 @@ class Pdrecaptcha extends Module
             if ($decode['score'] >= $score) {
                 return true;
             } else {
-                $errors = $this->l('The score is lower than the established, please try to send again.');
+                $errors = $this->l('The score is lower than the required, please try again.');
                 $this->context->controller->errors[] = $errors;
                 return false;
             }
