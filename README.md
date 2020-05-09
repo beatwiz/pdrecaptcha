@@ -5,8 +5,7 @@ Module originally is compatible with PS versions 1.6 and 1.7
 Please check main branch for more details.
 
 Changes made in this branch to the main branch:
-Added CAPTCHA verification option for customer registration page using the hook 
-# actionSubmitAccountBefore
+Added CAPTCHA verification option for customer registration page using the hook "actionSubmitAccountBefore"
 You will find a new switch button in module configuration page to enable or disable reCAPTCHA on customer registration page.
 
 This hook is available since PS 1.7.1+
